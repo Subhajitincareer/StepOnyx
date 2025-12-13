@@ -5,27 +5,28 @@
     "version": "1.0.0",
     "scheme": "steponyx",
     "orientation": "portrait",
-    "icon": "./assets/stepmaster.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#111827"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/stepmaster.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#111827"
       },
+      "package": "com.steponyx.app",
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.BODY_SENSORS"
       ],
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -33,6 +34,12 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "22412aef-828a-42ef-89c3-9ec68a8ff68a"
+      }
+    }
   }
 }
