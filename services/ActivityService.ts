@@ -15,8 +15,8 @@ export const ActivityService = {
     ) => {
         if (Platform.OS === 'web') return { remove: () => { } };
 
-        // Fast update for accurate peak detection
-        Accelerometer.setUpdateInterval(100);
+        // Faster update for snappier response
+        Accelerometer.setUpdateInterval(60);
 
         return Accelerometer.addListener((data) => {
             const { x, y, z } = data;
@@ -52,11 +52,11 @@ export const ActivityService = {
             onActivityChange(type);
 
             // 3. Software Step Counting (Peak Detection)
-            // Tuning for "2 steps counted as 1" -> usually means we miss the intermediate lighter step or lockout is too long.
-            // threshold: 1.08 (very sensitive)
-            // lockout: 200ms (very fast)
+            // Tuned for responsiveness vs accuracy.
+            // threshold: 1.2 (Balanced for responsiveness)
+            // lockout: 250ms (Allows up to 240 steps/min).
             const now = Date.now();
-            if (magnitude > 1.08 && (now - lastStepTime > 200)) {
+            if (magnitude > 1.2 && (now - lastStepTime > 250)) {
                 lastStepTime = now;
                 if (onStepDetected) {
                     onStepDetected();

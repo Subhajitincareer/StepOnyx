@@ -1,17 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 import Animated, {
     useSharedValue,
     useAnimatedProps,
+    useAnimatedStyle,
     withTiming,
+    withSequence,
+    withSpring,
     Easing,
 } from "react-native-reanimated";
 import { useTheme } from "../context/ThemeContext";
 
 const { width } = Dimensions.get("window");
-const SIZE = width * 0.75; // Larger ring
-const STROKE_WIDTH = 15; // Thinner, elegant stroke
+const SIZE = width * 0.65; // Slightly smaller for new layout
+const STROKE_WIDTH = 15;
 const RADIUS = (SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -25,6 +28,8 @@ interface StepRingProps {
 export function StepRing({ steps, goal }: StepRingProps) {
     const { colors } = useTheme();
     const progress = useSharedValue(0);
+    const pulseScale = useSharedValue(1);
+    const prevSteps = useRef(steps);
 
     // Calculate percentage (0 to 1)
     const percentage = Math.min(Math.max(steps / goal, 0), 1);
@@ -36,15 +41,33 @@ export function StepRing({ steps, goal }: StepRingProps) {
         });
     }, [percentage]);
 
+    // Pulse animation when steps change
+    useEffect(() => {
+        if (steps > prevSteps.current) {
+            // New step detected - trigger pulse!
+            pulseScale.value = withSequence(
+                withSpring(1.05, { damping: 8, stiffness: 400 }),
+                withSpring(1, { damping: 15, stiffness: 300 })
+            );
+        }
+        prevSteps.current = steps;
+    }, [steps]);
+
     const animatedProps = useAnimatedProps(() => {
         return {
             strokeDashoffset: CIRCUMFERENCE * (1 - progress.value),
         };
     });
 
+    const pulseStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ scale: pulseScale.value }],
+        };
+    });
+
     return (
         <View style={styles.container}>
-            <View style={styles.ringContainer}>
+            <Animated.View style={[styles.ringContainer, pulseStyle]}>
                 <Svg width={SIZE} height={SIZE}>
                     <G rotation="-90" origin={`${SIZE / 2}, ${SIZE / 2}`}>
                         {/* Background Ring */}
@@ -65,7 +88,7 @@ export function StepRing({ steps, goal }: StepRingProps) {
                             strokeWidth={STROKE_WIDTH}
                             fill="transparent"
                             strokeDasharray={CIRCUMFERENCE}
-                            strokeLinecap="round" // Rounded ends for premium feel
+                            strokeLinecap="round"
                             animatedProps={animatedProps}
                         />
                     </G>
@@ -76,7 +99,7 @@ export function StepRing({ steps, goal }: StepRingProps) {
                     <Text style={[styles.stepCount, { color: colors.accent }]}>{steps.toLocaleString()}</Text>
                     <Text style={[styles.stepLabel, { color: colors.textSub }]}>steps</Text>
                 </View>
-            </View>
+            </Animated.View>
         </View>
     );
 }
@@ -85,7 +108,7 @@ const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginVertical: 40,
+        marginVertical: 20,
     },
     ringContainer: {
         width: SIZE,
@@ -98,8 +121,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     stepCount: {
-        fontSize: 48, // Big hero number
-        fontWeight: '200', // Thin font for elegance
+        fontSize: 42,
+        fontWeight: '200',
         fontVariant: ['tabular-nums'],
     },
     stepLabel: {

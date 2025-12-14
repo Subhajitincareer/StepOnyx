@@ -40,6 +40,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const systemScheme = useColorScheme();
     const [theme, setTheme] = useState<Theme>('light');
 
+    const [isThemeLoaded, setIsThemeLoaded] = useState(false);
+
     useEffect(() => {
         const loadTheme = async () => {
             try {
@@ -51,10 +53,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 }
             } catch (e) {
                 console.error('Failed to load theme', e);
+            } finally {
+                setIsThemeLoaded(true);
             }
         };
         loadTheme();
     }, []);
+
+    // Prevent flash of wrong theme
+    if (!isThemeLoaded) {
+        return null;
+    }
 
     const toggleTheme = async () => {
         const newTheme = theme === 'light' ? 'dark' : 'light';

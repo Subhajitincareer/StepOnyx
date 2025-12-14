@@ -31,8 +31,68 @@ export default function Settings() {
         ]);
     };
 
+    const handleReset = () => {
+        Alert.alert(
+            "Reset Today's Data?",
+            "This will clear your steps and water intake for today. This action cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Reset",
+                    style: "destructive",
+                    onPress: async () => {
+                        const today = StorageService.getTodayDate();
+                        await StorageService.saveDailySteps(today, 0);
+                        await StorageService.saveWater(today, 0);
+                        router.back();
+                    }
+                }
+            ]
+        );
+    };
+
+    // Reusable Section Header
+    const SectionHeader = ({ title }: { title: string }) => (
+        <Text style={[styles.sectionHeader, { color: colors.textSub }]}>{title}</Text>
+    );
+
+    // Reusable Menu Item
+    const MenuItem = ({
+        icon,
+        label,
+        onPress,
+        rightElement,
+        danger = false
+    }: {
+        icon: string;
+        label: string;
+        onPress?: () => void;
+        rightElement?: React.ReactNode;
+        danger?: boolean;
+    }) => (
+        <TouchableOpacity
+            style={[styles.menuItem, { backgroundColor: colors.card }]}
+            onPress={onPress}
+            disabled={!onPress}
+            activeOpacity={onPress ? 0.7 : 1}
+        >
+            <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: danger ? colors.danger + '20' : colors.tint }]}>
+                    <Ionicons
+                        name={icon as any}
+                        size={20}
+                        color={danger ? colors.danger : colors.text}
+                    />
+                </View>
+                <Text style={[styles.menuItemLabel, { color: danger ? colors.danger : colors.text }]}>{label}</Text>
+            </View>
+            {rightElement || (onPress && <Ionicons name="chevron-forward" size={20} color={colors.textSub} />)}
+        </TouchableOpacity>
+    );
+
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
+            {/* Header */}
             <View style={styles.header}>
                 <Link href="/" asChild>
                     <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.card }]}>
@@ -44,41 +104,75 @@ export default function Settings() {
             </View>
 
             <View style={styles.content}>
+                {/* SECTION: Preferences */}
+                <SectionHeader title="PREFERENCES" />
 
-                {/* Theme Toggle - New Feature */}
-                <View style={[styles.toggleContainer, { backgroundColor: colors.card }]}>
-                    <View style={styles.toggleLabelRow}>
-                        <Ionicons name={theme === 'dark' ? "moon" : "sunny"} size={22} color={colors.text} style={{ marginRight: 12 }} />
-                        <Text style={[styles.toggleText, { color: colors.text }]}>Dark Mode</Text>
+                {/* Dark Mode Toggle */}
+                <MenuItem
+                    icon={theme === 'dark' ? "moon" : "sunny"}
+                    label="Dark Mode"
+                    rightElement={
+                        <Switch
+                            value={theme === 'dark'}
+                            onValueChange={toggleTheme}
+                            trackColor={{ false: '#e5e7eb', true: '#22c55e' }}
+                            thumbColor={'#fff'}
+                        />
+                    }
+                />
+
+                {/* Daily Goal */}
+                <View style={[styles.goalCard, { backgroundColor: colors.card }]}>
+                    <View style={styles.goalHeader}>
+                        <View style={[styles.iconContainer, { backgroundColor: colors.tint }]}>
+                            <Ionicons name="flag" size={20} color={colors.text} />
+                        </View>
+                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>Daily Target</Text>
                     </View>
-                    <Switch
-                        value={theme === 'dark'}
-                        onValueChange={toggleTheme}
-                        trackColor={{ false: '#e5e7eb', true: '#22c55e' }}
-                        thumbColor={'#fff'}
+                    <TextInput
+                        style={[styles.goalInput, { color: colors.text }]}
+                        value={goal}
+                        onChangeText={setGoal}
+                        keyboardType="numeric"
+                        maxLength={5}
+                        placeholder="10000"
+                        placeholderTextColor={colors.textSub}
                     />
+                    <Text style={[styles.goalHelper, { color: colors.textSub }]}>steps per day</Text>
+                    <TouchableOpacity
+                        style={[styles.saveButton, { backgroundColor: colors.accent }]}
+                        onPress={handleSave}
+                    >
+                        <Text style={[styles.saveButtonText, { color: colors.background }]}>Save Goal</Text>
+                    </TouchableOpacity>
                 </View>
 
+                {/* SECTION: Data & History */}
+                <SectionHeader title="DATA & HISTORY" />
 
-                <View style={{ height: 40 }} />
+                <Link href="/history" asChild>
+                    <MenuItem icon="bar-chart" label="View Weekly Stats" onPress={() => { }} />
+                </Link>
 
+                <Link href="/achievements" asChild>
+                    <MenuItem icon="trophy" label="Achievements" onPress={() => { }} />
+                </Link>
 
-                <Text style={[styles.label, { color: colors.textSub }]}>Your Daily Target</Text>
-                <TextInput
-                    style={[styles.input, { color: colors.text }]}
-                    value={goal}
-                    onChangeText={setGoal}
-                    keyboardType="numeric"
-                    maxLength={5}
-                    placeholder="10000"
-                    placeholderTextColor={colors.textSub}
+                {/* SECTION: Danger Zone */}
+                <SectionHeader title="DANGER ZONE" />
+
+                <MenuItem
+                    icon="trash"
+                    label="Reset Today's Data"
+                    onPress={handleReset}
+                    danger
                 />
-                <Text style={[styles.helperText, { color: colors.textSub }]}>Steps per day</Text>
 
-                <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.accent }]} onPress={handleSave}>
-                    <Text style={[styles.saveButtonText, { color: colors.background }]}>Update Goal</Text>
-                    <Ionicons name="checkmark" size={24} color={colors.background} style={{ marginLeft: 8 }} />
-                </TouchableOpacity>
+                {/* Footer */}
+                <View style={styles.footer}>
+                    <Text style={[styles.footerText, { color: colors.textSub }]}>StepOnyx v1.0.0</Text>
+                    <Text style={[styles.footerText, { color: colors.textSub }]}>Made with ❤️</Text>
+                </View>
             </View>
         </View>
     );
@@ -94,7 +188,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: 30,
     },
     title: {
         fontSize: 20,
@@ -106,61 +200,75 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        alignItems: 'center',
     },
-    // Toggle
-    toggleContainer: {
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        borderRadius: 20,
-        marginBottom: 20,
-    },
-    toggleLabelRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    toggleText: {
-        fontSize: 18,
-        fontWeight: '600',
-    },
-
-    label: {
-        fontSize: 16,
-        fontWeight: '500',
-        marginBottom: 16,
-        textTransform: 'uppercase',
+    sectionHeader: {
+        fontSize: 12,
+        fontWeight: '700',
         letterSpacing: 1,
+        marginTop: 24,
+        marginBottom: 12,
+        marginLeft: 4,
     },
-    input: {
-        fontSize: 56, // Massive input
-        fontWeight: '800',
-        textAlign: 'center',
-        padding: 0,
-        marginBottom: 8,
-        width: '100%',
-    },
-    helperText: {
-        fontSize: 16,
-        marginBottom: 60,
-    },
-    saveButton: {
-        width: '100%',
-        paddingVertical: 20,
-        borderRadius: 24,
+    menuItem: {
         flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 8,
+    },
+    menuItemLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 4,
+        marginRight: 14,
+    },
+    menuItemLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    goalCard: {
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 8,
+    },
+    goalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    goalInput: {
+        fontSize: 48,
+        fontWeight: '800',
+        textAlign: 'center',
+    },
+    goalHelper: {
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 16,
+    },
+    saveButton: {
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
     },
     saveButtonText: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    footer: {
+        alignItems: 'center',
+        marginTop: 'auto',
+        paddingBottom: 40,
+    },
+    footerText: {
+        fontSize: 12,
+        marginTop: 4,
     },
 });
